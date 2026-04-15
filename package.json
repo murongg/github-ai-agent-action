@@ -8,7 +8,8 @@
   "scripts": {
     "build": "tsc --noEmit && ncc build src/main.ts -o dist --source-map --license licenses.txt",
     "test": "vitest run",
-    "check": "npm run test && npm run build"
+    "check": "npm run test && npm run build",
+    "release": "bumpp --git-check --commit \"chore: release v%s\" --tag \"v%s\" --execute \"npm run check\""
   },
   "dependencies": {
     "@actions/core": "^1.11.1",
@@ -18,6 +19,7 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "@vercel/ncc": "^0.38.3",
+    "bumpp": "^11.0.1",
     "typescript": "^5.8.3",
     "vitest": "^3.2.4"
   }
