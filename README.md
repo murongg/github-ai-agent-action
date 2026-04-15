@@ -50,6 +50,7 @@ jobs:
       - uses: your-org/github-ai-agent-action@v1
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          openai-base-url: ${{ secrets.OPENAI_BASE_URL }}
           github-token: ${{ github.token }}
 ```
 
@@ -71,6 +72,7 @@ jobs:
       - uses: your-org/github-ai-agent-action@v1
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          openai-base-url: ${{ secrets.OPENAI_BASE_URL }}
           github-token: ${{ github.token }}
           enable-write-actions: "true"
           allowed-operations: "rerun-workflow,add-labels,remove-labels,request-reviewers,close-item,reopen-item"

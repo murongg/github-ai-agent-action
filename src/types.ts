@@ -30,6 +30,7 @@ export interface AgentCommand {
 
 export interface ActionInputs {
   openaiApiKey: string
+  openaiBaseUrl?: string
   githubToken: string
   model: string
   allowUsers: string[]

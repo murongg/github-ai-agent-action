@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 import { createPendingMarker } from '../src/pending.js'
-import { buildUnauthorizedReply, findLatestPendingOperationBody } from '../src/main.js'
+import { buildUnauthorizedReply, findLatestPendingOperationBody, registerActionSecrets } from '../src/main.js'
 
 test('buildUnauthorizedReply explains allow policy', () => {
   const reply = buildUnauthorizedReply('/ai review')
@@ -46,4 +46,23 @@ test('findLatestPendingOperationBody returns most recent valid marker body', () 
     { body: `newer\n\n${marker2}` },
   ], 'secret', 'op_1')
   expect(specific?.id).toBe('op_1')
+})
+
+test('registerActionSecrets includes optional openai base url', () => {
+  const captured: string[] = []
+
+  registerActionSecrets(
+    {
+      openaiApiKey: 'sk-test',
+      openaiBaseUrl: 'https://secret-gateway.example/v1',
+      githubToken: 'ghs-test',
+    },
+    (value) => captured.push(value),
+  )
+
+  expect(captured).toEqual([
+    'sk-test',
+    'https://secret-gateway.example/v1',
+    'ghs-test',
+  ])
 })

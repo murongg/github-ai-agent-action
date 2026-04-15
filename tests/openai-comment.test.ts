@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { extractTextResponse } from '../src/openai.js'
+import { createOpenAIClient, extractTextResponse } from '../src/openai.js'
 import { buildReplyBody } from '../src/comment.js'
 
 test('extractTextResponse handles output_text', () => {
@@ -22,4 +22,13 @@ test('buildReplyBody appends read-only marker when no pending operation exists',
   expect(body).toMatch(/"requestedBy":"alice"/)
   expect(body).toMatch(/Analysis here/)
   expect(body).toMatch(/No repository changes were made/)
+})
+
+test('createOpenAIClient supports overriding baseURL', () => {
+  const client = createOpenAIClient({
+    apiKey: 'sk-test',
+    baseURL: 'https://example.com/v1',
+  })
+
+  expect(client.baseURL).toBe('https://example.com/v1')
 })

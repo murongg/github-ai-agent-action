@@ -41,6 +41,17 @@ function isExecutedDirectly(): boolean {
   return import.meta.url === pathToFileURL(entry).href
 }
 
+export function registerActionSecrets(
+  inputs: Pick<ActionInputs, 'openaiApiKey' | 'openaiBaseUrl' | 'githubToken'>,
+  registerSecret: (value: string) => void = core.setSecret,
+): void {
+  registerSecret(inputs.openaiApiKey)
+  if (inputs.openaiBaseUrl) {
+    registerSecret(inputs.openaiBaseUrl)
+  }
+  registerSecret(inputs.githubToken)
+}
+
 export async function generateReadCommandReply(options: {
   command: AgentCommand
   repoContext: RepoContext
@@ -94,8 +105,7 @@ export async function generateReadCommandReply(options: {
 
 export async function run(): Promise<void> {
   const inputs = readInputs()
-  core.setSecret(inputs.openaiApiKey)
-  core.setSecret(inputs.githubToken)
+  registerActionSecrets(inputs)
 
   const payload = github.context.payload as Record<string, any>
   const commentBody = payload.comment?.body ?? ''
@@ -192,7 +202,10 @@ export async function run(): Promise<void> {
     repoContext,
     inputs,
     octokit,
-    client: createOpenAIClient(inputs.openaiApiKey),
+    client: createOpenAIClient({
+      apiKey: inputs.openaiApiKey,
+      baseURL: inputs.openaiBaseUrl,
+    }),
   })
 
   const body = buildReplyBody(

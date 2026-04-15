@@ -18,6 +18,7 @@ test('parseCommand supports common modes and freeform conversation', () => {
 test('parseInputsFromObject applies defaults', () => {
   const inputs = parseInputsFromObject({
     'openai-api-key': 'sk-test',
+    'openai-base-url': '',
     'github-token': 'ghs-test',
     model: '',
     'allow-users': 'alice, bob',
@@ -32,4 +33,22 @@ test('parseInputsFromObject applies defaults', () => {
   expect(inputs.allowAssociations).toEqual(['OWNER', 'MEMBER', 'COLLABORATOR'])
   expect(inputs.enableWriteActions).toBe(false)
   expect(inputs.allowedOperations).toContain('add-labels')
+  expect(inputs.openaiBaseUrl).toBeUndefined()
+})
+
+test('parseInputsFromObject keeps a configured openai base url', () => {
+  const inputs = parseInputsFromObject({
+    'openai-api-key': 'sk-test',
+    'openai-base-url': 'https://example.com/v1',
+    'github-token': 'ghs-test',
+    model: '',
+    'allow-users': '',
+    'allow-associations': '',
+    'enable-write-actions': '',
+    'max-diff-chars': '',
+    'max-log-chars': '',
+    'allowed-operations': '',
+  })
+
+  expect(inputs.openaiBaseUrl).toBe('https://example.com/v1')
 })

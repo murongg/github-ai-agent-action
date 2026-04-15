@@ -6,6 +6,10 @@ inputs:
   openai-api-key:
     description: "OpenAI API key used for agent responses."
     required: true
+  openai-base-url:
+    description: "Optional OpenAI-compatible API base URL override."
+    required: false
+    default: ""
   github-token:
     description: "GitHub token used for repository context, comments, and approved operations."
     required: false

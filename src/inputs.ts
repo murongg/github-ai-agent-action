@@ -45,6 +45,7 @@ export function parseInputsFromObject(values: Record<string, string>): ActionInp
 
   return {
     openaiApiKey,
+    openaiBaseUrl: values['openai-base-url']?.trim() || undefined,
     githubToken,
     model: values.model?.trim() || 'gpt-5.4-mini',
     allowUsers: splitCsv(values['allow-users'] ?? ''),
@@ -61,6 +62,7 @@ export function parseInputsFromObject(values: Record<string, string>): ActionInp
 export function readInputs(): ActionInputs {
   return parseInputsFromObject({
     'openai-api-key': core.getInput('openai-api-key', { required: true }),
+    'openai-base-url': core.getInput('openai-base-url'),
     'github-token': core.getInput('github-token', { required: true }),
     model: core.getInput('model'),
     'allow-users': core.getInput('allow-users'),
