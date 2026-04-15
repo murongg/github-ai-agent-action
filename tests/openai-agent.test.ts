@@ -175,3 +175,77 @@ test('returns a bounded error result when the tool budget is exhausted', async (
     { name: 'list_pr_files', cacheHit: false, errorCode: 'budget_exceeded' },
   ])
 })
+
+test('returns an invalid argument result when tool arguments are not valid json', async () => {
+  const client = {
+    responses: {
+      create: vi
+        .fn()
+        .mockResolvedValueOnce({
+          id: 'resp_1',
+          output: [
+            {
+              type: 'function_call',
+              name: 'get_issue_comments',
+              call_id: 'call_1',
+              arguments: '{not-json',
+            },
+          ],
+        })
+        .mockResolvedValueOnce({
+          id: 'resp_2',
+          output_text: 'The tool arguments were invalid, so I answered from existing context.',
+          output: [],
+        }),
+    },
+  }
+  const executeToolCall = vi.fn()
+
+  const result = await runToolEnabledAgent({
+    client: client as never,
+    model: 'gpt-5.4-mini',
+    prompt: 'summarize thread',
+    tools: [{ type: 'function', name: 'get_issue_comments' }],
+    executeToolCall,
+  })
+
+  expect(executeToolCall).not.toHaveBeenCalled()
+  expect(result.toolTrace).toEqual([
+    { name: 'get_issue_comments', cacheHit: false, errorCode: 'invalid_arguments' },
+  ])
+  expect(result.body).toBe('The tool arguments were invalid, so I answered from existing context.')
+})
+
+test('stops the tool loop after the configured max iterations', async () => {
+  const client = {
+    responses: {
+      create: vi.fn().mockResolvedValue({
+        id: 'resp_loop',
+        output: [
+          {
+            type: 'function_call',
+            name: 'get_issue_comments',
+            call_id: 'call_loop',
+            arguments: '{"limit":1}',
+          },
+        ],
+      }),
+    },
+  }
+
+  const result = await runToolEnabledAgent({
+    client: client as never,
+    model: 'gpt-5.4-mini',
+    prompt: 'summarize thread',
+    tools: [{ type: 'function', name: 'get_issue_comments' }],
+    executeToolCall: async () => ({ ok: true, data: [] }),
+    maxIterations: 2,
+  })
+
+  expect(result.body).toMatch(/tool-call loop exceeded/i)
+  expect(result.toolTrace.at(-1)).toEqual({
+    name: 'agent_loop',
+    cacheHit: false,
+    errorCode: 'max_iterations_exceeded',
+  })
+})

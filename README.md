@@ -78,6 +78,16 @@ jobs:
           allowed-operations: "rerun-workflow,add-labels,remove-labels,request-reviewers,close-item,reopen-item"
 ```
 
+## Publishing
+
+This repository commits the generated `dist/` bundle so the Action can be consumed directly from a tag. Before publishing, run `npm run check`, commit the refreshed `dist/`, and create a version tag.
+
+Consumers should reference a tag, for example:
+
+```yaml
+- uses: your-org/github-ai-agent-action@v1
+```
+
 ## Notes
 
 - Comments, diffs, workflow logs, README, and `AGENTS.md` are treated as untrusted context.

@@ -33,6 +33,26 @@ function isReadToolName(name: string): name is ReadToolName {
   return readToolNames.has(name as ReadToolName)
 }
 
+function parseFunctionArguments(input: string): { ok: true; data: Record<string, unknown> } | { ok: false; errorCode: string; message: string } {
+  try {
+    const parsed = JSON.parse(input) as unknown
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return {
+        ok: false,
+        errorCode: 'invalid_arguments',
+        message: 'Tool arguments must be a JSON object.',
+      }
+    }
+    return { ok: true, data: parsed as Record<string, unknown> }
+  } catch {
+    return {
+      ok: false,
+      errorCode: 'invalid_arguments',
+      message: 'Tool arguments were not valid JSON.',
+    }
+  }
+}
+
 export async function runToolEnabledAgent(options: {
   client: {
     responses: {
@@ -49,6 +69,7 @@ export async function runToolEnabledAgent(options: {
   executeToolCall: (name: string, args: Record<string, unknown>) => Promise<unknown>
   maxToolCalls?: number
   maxWorkflowLogCalls?: number
+  maxIterations?: number
 }): Promise<{
   body: string
   toolTrace: Array<{ name: string; cacheHit: boolean; errorCode?: string }>
@@ -59,6 +80,7 @@ export async function runToolEnabledAgent(options: {
     maxCalls: options.maxToolCalls ?? 5,
     maxWorkflowLogCalls: options.maxWorkflowLogCalls ?? 1,
   })
+  const maxIterations = options.maxIterations ?? 8
 
   let response = await options.client.responses.create({
     model: options.model,
@@ -66,7 +88,7 @@ export async function runToolEnabledAgent(options: {
     tools: options.tools,
   })
 
-  for (;;) {
+  for (let iteration = 0; iteration < maxIterations; iteration += 1) {
     const functionCalls = extractFunctionCalls(response)
     if (functionCalls.length === 0) {
       return {
@@ -95,12 +117,16 @@ export async function runToolEnabledAgent(options: {
           message: `Unsupported tool: ${functionCall.name}.`,
         }
       } else {
-        const budgetResult = budget.tryConsume(functionCall.name)
-        if (!budgetResult.ok) {
-          toolResult = budgetResult
+        const parsedArgs = parseFunctionArguments(functionCall.arguments)
+        if (!parsedArgs.ok) {
+          toolResult = parsedArgs
         } else {
-          const parsedArgs = JSON.parse(functionCall.arguments) as Record<string, unknown>
-          toolResult = await options.executeToolCall(functionCall.name, parsedArgs)
+          const budgetResult = budget.tryConsume(functionCall.name)
+          if (!budgetResult.ok) {
+            toolResult = budgetResult
+          } else {
+            toolResult = await options.executeToolCall(functionCall.name, parsedArgs.data)
+          }
           cache.set(cacheKey, toolResult)
         }
       }
@@ -130,5 +156,16 @@ export async function runToolEnabledAgent(options: {
       input: outputs,
       tools: options.tools,
     })
+  }
+
+  toolTrace.push({
+    name: 'agent_loop',
+    cacheHit: false,
+    errorCode: 'max_iterations_exceeded',
+  })
+
+  return {
+    body: 'I could not complete the response because the tool-call loop exceeded the configured iteration limit.',
+    toolTrace,
   }
 }
