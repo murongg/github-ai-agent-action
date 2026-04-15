@@ -1,0 +1,24 @@
+{
+  "name": "github-ai-agent-action",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A comment-driven GitHub repo AI agent with approval-gated non-code operations.",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc --noEmit && ncc build src/main.ts -o dist --source-map --license licenses.txt",
+    "test": "vitest run",
+    "check": "npm run test && npm run build"
+  },
+  "dependencies": {
+    "@actions/core": "^1.11.1",
+    "@actions/github": "^6.0.0",
+    "openai": "^6.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@vercel/ncc": "^0.38.3",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  }
+}

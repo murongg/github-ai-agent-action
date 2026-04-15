@@ -1,0 +1,52 @@
+name: "GitHub AI Agent"
+description: "Respond to /ai comments and execute approved non-code operations."
+author: "github-ai-agent-action"
+
+inputs:
+  openai-api-key:
+    description: "OpenAI API key used for agent responses."
+    required: true
+  github-token:
+    description: "GitHub token used for repository context, comments, and approved operations."
+    required: false
+    default: ${{ github.token }}
+  model:
+    description: "OpenAI model to use."
+    required: false
+    default: "gpt-5.4-mini"
+  allow-users:
+    description: "Comma-separated GitHub usernames allowed to trigger or approve actions."
+    required: false
+    default: ""
+  allow-associations:
+    description: "Comma-separated author associations allowed to trigger or approve actions."
+    required: false
+    default: "OWNER,MEMBER,COLLABORATOR"
+  enable-write-actions:
+    description: "Enable approval-gated execution."
+    required: false
+    default: "false"
+  max-diff-chars:
+    description: "Maximum PR diff characters sent to the model."
+    required: false
+    default: "60000"
+  max-log-chars:
+    description: "Maximum CI log characters sent to the model."
+    required: false
+    default: "60000"
+  allowed-operations:
+    description: "Comma-separated approved operation types."
+    required: false
+    default: ""
+
+outputs:
+  reply:
+    description: "Generated agent reply."
+  mode:
+    description: "Resolved agent mode."
+  operation-id:
+    description: "Pending or executed operation id when relevant."
+
+runs:
+  using: "node20"
+  main: "dist/index.js"
